@@ -1,3 +1,3 @@
-import TicTacToe
+from TicTacToe import TicTacToe_start
 
-TicTacToe.TicTacToe()
+TicTacToe_start.TicTacToe_start()

@@ -1,24 +1,72 @@
 '''
 TODO:
 - Peliruudun alapalkki ei skaalaudu atm
-- Mousebuttondown-eventit (& valinnan trackaus): https://medium.com/@01one/how-to-create-clickable-button-in-pygame-8dd608d17f1b
 - Laudan koko peli-ikkunassa
-- Jokaiselle oma Rect-objekti --> collidepointilla trackaus (mousebuttonup rectin alueella --> muuttujaan mikä kyseessä). Pelimoodissa rectin perusteella vain funktiokutsu (& error handle)
-- Spacing + boksin oma leveys erona toiseen, korkeus aina vakio
+- Aloitusruutu oma luokka, peli (1 & 2) omaan luokkaansa, voi periä aloituksen?
+- Loopin korjaus
 '''
 
 import pygame as pg
 import random
 
-class TicTacToe:
+class TicTacToe_start:
 
     def __init__(self):
 
         self.white = (255,255,255)
         self.black = (0,0,0)
         self.grey = (220,220,220)
+        self.red = (255, 0, 0)
         self.clock = pg.time.Clock()
-        TicTacToe.starting_screen(self)
+        TicTacToe_start.starting_screen(self)
+
+    def starting_screen_buttons(self, surface, width) -> list:
+        
+        button_texts = ("3x3", "5x5", "7x7", "1v1", "2v2")
+        button_objs = []
+
+        for i in range(len(button_texts[:3])):
+
+            button_surface = pg.Surface((125, 50))
+            button_size = (125, 50)
+
+            # (Total width - sum of button widths) / Amount of "empty spacing" needed:
+            button_spacing = ((width - (len(button_texts[:3])*button_surface.get_width())) // 4)
+
+            button_x = button_spacing*(i+1) + ((i+1)*(button_size[0] // 2))
+            button_y = 250
+
+            button_obj = pg.Rect(button_x, button_y, button_size[0], button_size[1])
+            button_objs.append(button_obj)
+            
+            pg.draw.rect(surface, color=self.grey, rect=button_obj)
+            pg.draw.rect(surface, color=self.white, rect=button_obj, width=3)
+            
+            button_font = pg.font.SysFont('cambria.ttf', 24).render(button_texts[:3][i], True, self.black)
+            surface.blit(button_font, button_font.get_rect(center=(button_obj.centerx, button_obj.centery)))
+
+        for i in range (len(button_texts[3:])):
+
+            button_surface = pg.Surface((175, 100))
+            button_size = (175, 100)
+
+            button_spacing = ((width - (len(button_texts[3:])*button_surface.get_width())) // 3)
+
+            button_x = button_spacing*(i+1) + (i*button_size[0])
+            button_y = 420
+
+            button_obj = pg.Rect(button_x, button_y, button_size[0], button_size[1])
+            button_objs.append(button_obj)
+
+            pg.draw.rect(surface, color=self.grey, rect=button_obj)
+            pg.draw.rect(surface, color=self.white, rect=button_obj, width=3)
+            
+            button_font = pg.font.SysFont('cambria.ttf', 24).render(button_texts[3:][i], True, self.black)
+            surface.blit(button_font, button_font.get_rect(center=(button_obj.centerx, button_obj.centery)))
+
+        return button_objs
+    
+
 
     def starting_screen(self):
 
@@ -39,35 +87,17 @@ class TicTacToe:
             True, self.white)
         surface.blit(welcome_msg, welcome_msg.get_rect(center=(width // 2, 150)))
 
-        win_conditions = pg.font.SysFont('cambria.ttf', 24).render("To win, either place three (for 3x3) or four (for 5x5 and 7x7) X's in a horizontal, vertical or diagonal row.", True, self.white)
+        win_conditions = pg.font.SysFont('cambria.ttf', 21).render(
+            "To win, either place three (for 3x3) or four (for 5x5 and 7x7) X's (or O's) in a horizontal, vertical or diagonal row.", 
+            True, self.white)
         surface.blit(win_conditions, win_conditions.get_rect(center=(width // 2, 200)))
 
-        # Clickable buttons:
-        button_font = pg.font.SysFont('cambria.ttf', 24) #kippaa looppiin, ei tarvi omaa muuttujaa
-        
-        button_texts = ("3x3", "5x5", "7x7")
-        for txt in range(len(button_texts)):
-            button_surface = pg.Surface((150, 50))
-
-            # Button size & equal spacing:
-            button_size_spacing = [(150, 50), ((width - (len(button_texts)*button_surface.get_width())) // 4)]
-            button_text = button_font.render(txt, True, self.white)
-            surface.blit(button_text, button_text.get_rect())
-
-        
-        button_rect = button_text.get_rect(center=(750, 250)) # leveys, korkeus
-        surface.blit(button_text, button_rect)
-
-
-        button_surface = pg.Surface((150, 50)) # koko
-        button_obj = pg.Rect(width // 2, height // 2, 150, 50)#button_surface.get_width(), button_surface.get_height())
-        #surface.blit(button_surface, (button_obj.x, button_obj.y))
-
-        pg.draw.rect(surface, color=self.grey, rect=button_obj)
-        pg.draw.rect(surface, color=self.white, rect=button_obj, width=3)
+        button_objs = self.starting_screen_buttons(surface, width)
 
         pg.display.flip()
         pg.display.update()
+
+        buttonPressed = 0
 
         while True:
             self.clock.tick(60)
@@ -75,6 +105,40 @@ class TicTacToe:
                 if event.type == pg.QUIT:
                     pg.quit()
                     raise SystemExit
+                
+                # Check mouse events and return buttons to their initial status:
+                if event.type == pg.MOUSEBUTTONDOWN:
+                #     for i, x in enumerate(button_objs[:3]):
+                #         print(i, x)
+                #         if button_objs[i].collidepoint(event.pos):
+                #             buttonPressed = i+1
+                #             self.starting_screen_buttons(surface, width)
+                #             pg.draw.rect(surface, color=self.red, rect=button_objs[i], width=3)
+                #             pg.display.update()
+                #     for i, x in enumerate(button_objs[3:]):
+                #         if button_objs[i].collidepoint(event.pos) and buttonPressed != 0:
+                #             print(buttonPressed)
+
+                    if button_objs[0].collidepoint(event.pos):
+                        buttonPressed = 1
+                        self.starting_screen_buttons(surface, width)
+                        pg.draw.rect(surface, color=self.red, rect=button_objs[0], width=3)
+                        pg.display.update()
+                    if button_objs[1].collidepoint(event.pos):
+                        buttonPressed = 2
+                        self.starting_screen_buttons(surface, width)
+                        pg.draw.rect(surface, color=self.red, rect=button_objs[1], width=3)
+                        pg.display.update()
+                    if button_objs[2].collidepoint(event.pos):
+                        buttonPressed = 3
+                        self.starting_screen_buttons(surface, width)
+                        pg.draw.rect(surface, color=self.red, rect=button_objs[2], width=3)
+                        pg.display.update()
+                    if button_objs[3].collidepoint(event.pos) and buttonPressed != 0:
+                        print("ok")
+
+
+                    # if button_objs[4].collidepoint(event.pos) and buttonPressed != 0:
 
     def draw_grid(self, surface, width, grid_size):
 
@@ -100,7 +164,7 @@ class TicTacToe:
         surface = pg.display.set_mode((width,height))
         pg.display.set_caption('Tic-Tac-Toe')
 
-        TicTacToe.draw_grid(self, surface, width, grid_size)
+        TicTacToe_start.draw_grid(self, surface, width, grid_size)
         pg.display.flip()
             
         while True:
@@ -111,4 +175,4 @@ class TicTacToe:
                     raise SystemExit
 
 if __name__ == '__main__':
-    TicTacToe()
+    TicTacToe_start()
