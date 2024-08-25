@@ -1,9 +1,10 @@
 '''
 TODO:
 - Peliruudun alapalkki ei skaalaudu atm
-- Aloitusruutu: 1. ruudun koko 2. yksin- vai moninpeli (& error catch)
 - Mousebuttondown-eventit (& valinnan trackaus): https://medium.com/@01one/how-to-create-clickable-button-in-pygame-8dd608d17f1b
 - Laudan koko peli-ikkunassa
+- Jokaiselle oma Rect-objekti --> collidepointilla trackaus (mousebuttonup rectin alueella --> muuttujaan mikä kyseessä). Pelimoodissa rectin perusteella vain funktiokutsu (& error handle)
+- Spacing + boksin oma leveys erona toiseen, korkeus aina vakio
 '''
 
 import pygame as pg
@@ -15,7 +16,9 @@ class TicTacToe:
 
         self.white = (255,255,255)
         self.black = (0,0,0)
-        TicTacToe.starting_screen(self) # tsek
+        self.grey = (220,220,220)
+        self.clock = pg.time.Clock()
+        TicTacToe.starting_screen(self)
 
     def starting_screen(self):
 
@@ -23,48 +26,51 @@ class TicTacToe:
         height = 600
         
         pg.init()
-        clock = pg.time.Clock()
 
         surface = pg.display.set_mode((width, height))
         pg.display.set_caption('Tic-Tac-Toe')
 
-        # Title & welcome msg:
+        # Title, welcome msg and win condition description:
         title = pg.font.SysFont('cambria.ttf', 62).render('Tic-Tac-Toe', True, self.white)
-        title_rect = title.get_rect()
-        title_rect.center = (width // 2, 50)
-        surface.blit(title, title_rect)
+        surface.blit(title, title.get_rect(center=(width // 2, 50)))
 
-        msg = pg.font.SysFont('cambria.ttf', 28).render(
+        welcome_msg = pg.font.SysFont('cambria.ttf', 28).render(
             'Welcome! To play, first select the wanted grid size and choose your game mode.',
-            True, self.white
-        )
+            True, self.white)
+        surface.blit(welcome_msg, welcome_msg.get_rect(center=(width // 2, 150)))
 
-        msg_rect = msg.get_rect()
-        msg_rect.center = (width // 2, 150)
-        surface.blit(msg, msg_rect)
+        win_conditions = pg.font.SysFont('cambria.ttf', 24).render("To win, either place three (for 3x3) or four (for 5x5 and 7x7) X's in a horizontal, vertical or diagonal row.", True, self.white)
+        surface.blit(win_conditions, win_conditions.get_rect(center=(width // 2, 200)))
 
         # Clickable buttons:
-        button_font = pg.font.SysFont('cambria.ttf', 14)
+        button_font = pg.font.SysFont('cambria.ttf', 24) #kippaa looppiin, ei tarvi omaa muuttujaa
+        
+        button_texts = ("3x3", "5x5", "7x7")
+        for txt in range(len(button_texts)):
+            button_surface = pg.Surface((150, 50))
 
-        #for i in range(3):
+            # Button size & equal spacing:
+            button_size_spacing = [(150, 50), ((width - (len(button_texts)*button_surface.get_width())) // 4)]
+            button_text = button_font.render(txt, True, self.white)
+            surface.blit(button_text, button_text.get_rect())
+
+        
+        button_rect = button_text.get_rect(center=(750, 250)) # leveys, korkeus
+        surface.blit(button_text, button_rect)
 
 
-        button_text = button_font.render('3x3', True, self.white)
-        button_rect = button_text.get_rect() # Voi olla myös näin: text.get_rect(center=(button_surface.get_width()/2, button_surface.get_height()/2))
-        button_rect.center = (width // 2, 250) # tsek
+        button_surface = pg.Surface((150, 50)) # koko
+        button_obj = pg.Rect(width // 2, height // 2, 150, 50)#button_surface.get_width(), button_surface.get_height())
+        #surface.blit(button_surface, (button_obj.x, button_obj.y))
 
-        button_obj = pg.Rect(125,125,150,50)
-        surface.blit(button_rect, button_obj) # Tsek
-
-
-
-
+        pg.draw.rect(surface, color=self.grey, rect=button_obj)
+        pg.draw.rect(surface, color=self.white, rect=button_obj, width=3)
 
         pg.display.flip()
         pg.display.update()
 
         while True:
-            clock.tick(60)
+            self.clock.tick(60)
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pg.quit()
@@ -98,6 +104,7 @@ class TicTacToe:
         pg.display.flip()
             
         while True:
+            self.clock.tick(60)
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pg.quit()
