@@ -7,6 +7,7 @@ TODO:
 '''
 
 import pygame as pg
+import time
 import random
 
 class TicTacToe_start:
@@ -135,7 +136,10 @@ class TicTacToe_start:
                         pg.draw.rect(surface, color=self.red, rect=button_objs[2], width=3)
                         pg.display.update()
                     if button_objs[3].collidepoint(event.pos) and buttonPressed != 0:
+                        time.sleep(1.0)
                         print("ok")
+                        self.mainloop()
+
 
 
                     # if button_objs[4].collidepoint(event.pos) and buttonPressed != 0:
