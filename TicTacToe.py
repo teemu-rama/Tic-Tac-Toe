@@ -1,9 +1,7 @@
 '''
 TODO:
 - Peliruudun alapalkki ei skaalaudu atm
-- Laudan koko peli-ikkunassa
-- Aloitusruutu oma luokka, peli (1 & 2) omaan luokkaansa, voi periä aloituksen?
-- Mainloopissa ruudukon koko -parametri (saako tuotua starting screenilta)
+- Surface-objektit (& hitboxit) kullekin ruudulle + mouseEventtien trackaus (& pelivuoron)
 '''
 
 import pygame as pg
@@ -38,7 +36,7 @@ class TicTacToe_start:
             button_y = 250
 
             button_obj = pg.Rect(button_x, button_y, button_size[0], button_size[1])
-            button_objs.append(button_obj)
+            button_objs.append((button_obj, button_texts[i]))
             
             pg.draw.rect(surface, color=self.grey, rect=button_obj)
             pg.draw.rect(surface, color=self.white, rect=button_obj, width=3)
@@ -67,8 +65,6 @@ class TicTacToe_start:
 
         return button_objs
     
-
-
     def starting_screen(self):
 
         width = 800
@@ -98,7 +94,7 @@ class TicTacToe_start:
         pg.display.flip()
         pg.display.update()
 
-        gridSelected = 0
+        gridSize = 0
 
         while True:
             self.clock.tick(60)
@@ -109,16 +105,18 @@ class TicTacToe_start:
                 
                 # Check mouse events and return buttons to their initial status after a click:
                 if event.type == pg.MOUSEBUTTONDOWN:
-                    for i, obj in enumerate(button_objs[:3]):
-                        if obj.collidepoint(event.pos):
-                            gridSelected = i+1
+                    for obj in button_objs[:3]:
+                        if obj[0].collidepoint(event.pos):
+                            gridSize = obj[1][0]
                             self.starting_screen_buttons(surface, width)
-                            pg.draw.rect(surface, color=self.red, rect=obj, width=3)
+                            pg.draw.rect(surface, color=self.red, rect=obj[0], width=3)
                             pg.display.update()
-                    for obj in button_objs[3:]:
-                        if obj.collidepoint(event.pos) and gridSelected != 0:
-                            time.sleep(1.0)
-                            self.mainloop(gridSelected)
+                    if button_objs[3].collidepoint(event.pos) and gridSize != 0:
+                        time.sleep(1.0)
+                        self.single_player(gridSize)
+                    if button_objs[4].collidepoint(event.pos) and gridSize != 0:
+                        time.sleep(1.0)
+                        self.multiplayer(gridSize)
 
     def draw_grid(self, surface, width, grid_size):
 
@@ -134,19 +132,25 @@ class TicTacToe_start:
         for i in range(len(line_coords)):
             pg.draw.line(surface, self.white, (0, line_coords[i]), (width, line_coords[i]), width=5)
 
-    def mainloop(self, gridSelected): # Tämä saa parametrina aiemmasta ikkunasta ruudukon koon, nimi muutettava
+    def single_player(self, gridSize):
+        pass
 
-        grid_size = (3,3)
-        width = grid_size[0]*100
-        height = width+50
+    def multiplayer(self, gridSize):
+        self.mainloop(gridSize)
 
-        print(gridSelected)
+    def mainloop(self, gridSize):
+
+        grid_size = (int(gridSize),int(gridSize))
+        width = grid_size[0]*100 # e.g. 3 * 100 
+        height = width+50 # 300 + 50
+
+        # Calculate each hitbox and form surfaces (only "insides" of each line)
         
         pg.init()
         surface = pg.display.set_mode((width,height))
         pg.display.set_caption('Tic-Tac-Toe')
 
-        TicTacToe_start.draw_grid(self, surface, width, grid_size)
+        self.draw_grid(surface, width, grid_size)
         pg.display.flip()
             
         while True:
